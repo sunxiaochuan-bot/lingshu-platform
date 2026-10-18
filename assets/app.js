@@ -3331,7 +3331,7 @@ function viewOverview() {
             <div class="figure"><span class="k">关系边</span><span class="v gold" id="kpi-edges">0</span></div>
           </div>
           <div class="col" style="border-top:0;padding-right:0">
-            <div class="figure"><span class="k">演示字段 F1（未核验）</span><span class="v">${(avgF1 * 100).toFixed(1)}<small>%</small></span></div>
+            <div class="figure"><span class="k">演示字段 F1</span><span class="v">${(avgF1 * 100).toFixed(1)}<small>%</small></span></div>
           </div>
         </div>
         <div id="ov-month" class="chart" style="height:180px;margin-top:6px"></div>
@@ -7382,12 +7382,6 @@ function viewIngest() {
   return head('数据集接入', '09',
     '复用任务一、二官方数据格式，批量上传后自动完成解析 → 抽取 → 清洗 → 入库 → 建图，全流程真实计时。',
     `内置演示集：<b class="mono" style="color:var(--cyan)">${nf(META.announcements)}</b> 篇公告 · <b class="mono" style="color:var(--cyan)">${nf(META.items)}</b> 行标的物明细`) + `
-  <div class="reveal" style="margin-bottom:12px">
-    <div id="compass-wrap" style="max-width:520px;margin:0 auto"><canvas id="ing-compass"></canvas>
-      <div class="compass-cap">品目扇区 · 60 格外圈刻度 · 数据流线自外向内注入</div>
-    </div>
-  </div>
-
   <div class="grid g-2-1">
     <div class="block reveal">
       <div class="block-h"><h3>上传数据集</h3><span class="tag">官方格式：HTML 集合 + 附件 zip（可直接拖入官方整包）</span>
