@@ -705,7 +705,7 @@ const Gate = (() => {
     /* 无标题海报版本：只保留星空/视频开场，短暂停留后自动进入平台。 */
     if (!gtitle) {
       setPhase('dust');
-      setTimeout(finish, 2800);
+      setTimeout(finish, 6200);
       return;
     }
     buildTitle();
@@ -730,21 +730,25 @@ const Gate = (() => {
   };
 })();
 
-/* 开场星野画布：星等三级（1.2 / 2 / 3.5px），独立闪烁相位，整体漂移 ≤4px/s */
+/* 开场星野画布：细星尘为主，少量蓝白与暖金高光，整体漂移 ≤4px/s */
 function initGateStars() {
   const cv = $('#gate-stars'); if (!cv) return { frame() {} };
   const ctx = cv.getContext('2d');
-  const N = TOUCH ? 120 : 260;
+  const N = TOUCH ? 150 : 320;
   const stars = [];
   for (let i = 0; i < N; i++) {
-    const tier = i % 3;
+    const roll = Math.random();
+    const tier = roll > .974 ? 2 : roll > .76 ? 1 : 0;
+    const warm = Math.random() < .07;
     stars.push({
       x: Math.random(), y: Math.random(),
-      r: tier === 0 ? 1.2 : tier === 1 ? 2 : 3.5,
+      r: tier === 0 ? .28 + Math.random() * .34 : tier === 1 ? .58 + Math.random() * .28 : .9 + Math.random() * .42,
       ph: Math.random() * Math.PI * 2,           /* 独立闪烁相位 */
       sp: .25 + Math.random() * .55,
       dx: (Math.random() - .5) * 3.2,            /* 漂移速度（px/s，合计 ≤4px/s） */
       dy: (Math.random() - .5) * 2.4,
+      color: warm ? '228,177,94' : Math.random() < .32 ? '151,187,224' : '221,230,240',
+      tier,
     });
   }
   let w = 0, h = 0, dpr = 1;
@@ -765,18 +769,28 @@ function initGateStars() {
     /* 镜2 起星野逐级点亮：整体强度按阶段爬升 */
     const lit = ph === 'line' ? .12 : ph === 'dust' ? Math.min(1, t / 1.6) : 1;
     ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'lighter';
     for (const s of stars) {
       s.x += s.dx * dt / Math.max(w, 1);
       s.y += s.dy * dt / Math.max(h, 1);
       if (s.x < -.02) s.x = 1.02; if (s.x > 1.02) s.x = -.02;
       if (s.y < -.02) s.y = 1.02; if (s.y > 1.02) s.y = -.02;
       const tw = .35 + .65 * (.5 + .5 * Math.sin(t * s.sp + s.ph));
-      const a = tw * lit * (s.r < 2 ? .5 : s.r < 3 ? .7 : .9);
-      ctx.beginPath(); ctx.arc(s.x * w, s.y * h, s.r, 0, 6.2832);
-      /* 仅三级星等：月光白（金色只留给强调，不用于星点） */
-      ctx.fillStyle = 'rgba(221,230,240,' + a.toFixed(3) + ')';
+      const a = tw * lit * (s.tier === 0 ? .28 : s.tier === 1 ? .42 : .58);
+      const x = s.x * w, y = s.y * h;
+      if (s.tier === 2) {
+        const halo = ctx.createRadialGradient(x, y, 0, x, y, s.r * 5.5);
+        halo.addColorStop(0, 'rgba(' + s.color + ',' + (a * .22).toFixed(3) + ')');
+        halo.addColorStop(.34, 'rgba(' + s.color + ',' + (a * .09).toFixed(3) + ')');
+        halo.addColorStop(1, 'rgba(' + s.color + ',0)');
+        ctx.fillStyle = halo;
+        ctx.beginPath(); ctx.arc(x, y, s.r * 5.5, 0, 6.2832); ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(x, y, s.r, 0, 6.2832);
+      ctx.fillStyle = 'rgba(' + s.color + ',' + a.toFixed(3) + ')';
       ctx.fill();
     }
+    ctx.globalCompositeOperation = 'source-over';
   }
   return { frame };
 }
