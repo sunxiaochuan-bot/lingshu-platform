@@ -500,20 +500,16 @@ tr.hit.shown td:first-child::before{ transform:translateY(-50%) scaleX(1); trans
 .btn[disabled]{ opacity:.35; cursor:not-allowed; }
 
 /* ══════════════ 开场层（分镜见 app.js Gate 时间轴） ══════════════ */
-#gate{ position:fixed; inset:0; z-index:900; background:#000; overflow:hidden; }
-#gate::before{
-  content:''; position:absolute; inset:-6%; z-index:0; opacity:.5; pointer-events:none;
-  background-image:
-    radial-gradient(1px 1px at 12% 18%, rgba(221,230,240,.9), transparent 62%),
-    radial-gradient(1px 1px at 72% 34%, rgba(143,176,216,.75), transparent 62%),
-    radial-gradient(1.4px 1.4px at 42% 76%, rgba(228,177,94,.55), transparent 62%),
-    radial-gradient(1px 1px at 88% 82%, rgba(221,230,240,.68), transparent 62%),
-    radial-gradient(1px 1px at 28% 48%, rgba(221,230,240,.52), transparent 62%),
-    radial-gradient(1.3px 1.3px at 62% 12%, rgba(143,176,216,.58), transparent 62%);
-  background-size:280px 230px,340px 310px,410px 360px,470px 390px,520px 440px,610px 510px;
-  animation:bootStarDrift 28s linear infinite;
+#gate{
+  position:fixed; inset:0; z-index:900; overflow:hidden;
+  background:#000 url("assets/poster-hero.jpg") center/cover no-repeat;
 }
-@keyframes bootStarDrift{ from{ transform:translate3d(0,0,0) } to{ transform:translate3d(-18px,11px,0) } }
+#gate::after{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 48%, transparent 0 34%, rgba(0,0,0,.42) 78%, rgba(0,0,0,.72) 100%),
+    linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.04) 42%, rgba(0,0,0,.44));
+}
 #gate.done{ opacity:0; pointer-events:none; transition:opacity .8s ease .05s; }
 #gate.gone{ display:none; }
 /* 上下 letterbox */
@@ -913,6 +909,6 @@ setTimeout(function(){if(!window.__BOOT_FAILED&&!document.documentElement.classL
 </script>
 <script defer src="assets/motion.js?v=64697ab4df" onload="__BOOT_STEP('动效引擎就绪，加载数据...')" onerror="__BOOT_FAIL('动效引擎加载失败，请刷新页面')"></script>
 <script defer src="assets/data.js?v=6f32e1ebda" onload="__BOOT_STEP('官方数据已载入，正在构建图谱...')" onerror="__BOOT_FAIL('官方数据加载失败，请刷新页面')"></script>
-<script defer src="assets/app.js?v=068d9e46f6" onload="__BOOT_STEP('平台启动中...')" onerror="__BOOT_FAIL('平台脚本加载失败，请刷新页面')"></script>
+<script defer src="assets/app.js?v=56b5d85e9c" onload="__BOOT_STEP('平台启动中...')" onerror="__BOOT_FAIL('平台脚本加载失败，请刷新页面')"></script>
 </body>
 </html>
