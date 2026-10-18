@@ -5989,15 +5989,15 @@ function ingThreeTables(records) {
       return (multi && i >= 0) ? uuid0 + '_' + String(i + 1).padStart(2, '0') : uuid0;
     };
     if (!wins.length) {
-      Z.push({ URL: '', UUID: uuid0, '标段/合同包': '未分包',
+      Z.push({ URL: '', UUID: uuid0, '主UUID': uuid0, '标段/合同包': '未分包',
         '项目名称': r.title || r.project || '', '采购单位': r.buyer || '',
         '中标供应商': '', '中标金额': r.amountYuan ? ingWan2(r.amountYuan) : '' });
     } else {
       const amts = r.amounts || [];
       wins.forEach((w, i) => {
         const amt = amts[i] != null ? amts[i] : (wins.length === 1 ? r.amountYuan : null);
-        Z.push({ URL: r.url || '', UUID: uuidOf(w.pkg),
-          '标段/合同包': (w.pkg || '').trim() || '未分包',
+        Z.push({ URL: r.url || '', UUID: uuidOf(w.pkg), '主UUID': uuid0,
+          '标段/合同包': (w.pkg || '').trim() || (multi ? '未明确分包' : '未分包'),
           '项目名称': r.title || r.project || '', '采购单位': r.buyer || '',
           '中标供应商': w.name || '', '中标金额': amt != null ? ingWan2(amt) : '' });
       });
@@ -6012,7 +6012,8 @@ function ingThreeTables(records) {
         })(row.pkg || '');
         const noticeCat = (r.tblCat && r.tblCat[pkgCode]) || r.noticeCat || '';
       const tot = row.total || (row.qty * row.unitPrice);
-      B.push({ UUID: uuidOf(effectivePkg), '标段/合同包': (effectivePkg || '').trim() || '未分包',
+      B.push({ UUID: uuidOf(effectivePkg), '主UUID': uuid0,
+          '标段/合同包': (effectivePkg || '').trim() || (multi ? '未明确分包' : '未分包'),
           '产品服务名称': row.name || '', '品目': row.cat || noticeCat || '', '品牌': row.brand || '',
         '规格型号': row.model || '', '数量': row.qtyRaw || row.qty || '',
         '单价': row.unitPrice ? ingWan(row.unitPrice) : '',
@@ -6059,7 +6060,8 @@ function ingThreeTables(records) {
       if (role === "\u4e2d\u6807\u4eba" && !e.pass) e.pass = "\u901a\u8fc7";
       if (role === "\u4e2d\u6807\u4eba" && e.pass === "\u901a\u8fc7" && !e.reviewNote) e.reviewNote = "依据中标人身份回填通过";
       if (!e.pass && !e.reviewNote) e.reviewNote = "源公告/附件未明确审查结论";
-      T.push({ UUID: uuidOf(e.pkg), "\u6807\u6bb5/\u5408\u540c\u5305": (e.pkg || "").trim() || "\u672a\u5206\u5305",
+      T.push({ UUID: uuidOf(e.pkg), "主UUID": uuid0,
+        "\u6807\u6bb5/\u5408\u540c\u5305": (e.pkg || "").trim() || (multi ? "未明确分包" : "未分包"),
         "\u540d\u79f0": e.name, "\u7c7b\u522b": role, "\u901a\u8fc7\u5ba1\u67e5": e.pass,
         "\u62a5\u4ef7\uff08\u4e07\u5143\uff09": e.price ? (e.price / 10000).toFixed(2) : "",
         "\u5f97\u5206": e.score, "\u672a\u4e2d\u6807\u539f\u56e0": role === "\u53c2\u4e0e\u4eba" ? e.reason : "",
@@ -6068,12 +6070,12 @@ function ingThreeTables(records) {
   }
   return {
     sheets: [
-      { name: '总表', rows: [['序号', 'URL', 'UUID', '标段/合同包', '项目名称', '采购单位', '中标供应商', '中标金额']]
-        .concat(Z.map((x, i) => [i + 1, x.URL, x.UUID, x['标段/合同包'], x['项目名称'], x['采购单位'], x['中标供应商'], x['中标金额']])) },
-      { name: '标的表', rows: [['序号', 'UUID', '标段/合同包', '产品服务名称', '品目', '品牌', '规格型号', '数量', '单价', '总价', '类别']]
-        .concat(B.map((x, i) => [i + 1, x.UUID, x['标段/合同包'], x['产品服务名称'], x['品目'], x['品牌'], x['规格型号'], x['数量'], x['单价'], x['总价'], x['类别']])) },
-      { name: '投标人表', rows: [['序号', 'UUID', '标段/合同包', '名称', '类别', '通过审查', '报价（万元）', '得分', '未中标原因', '审查说明']]
-        .concat(T.map((x, i) => [i + 1, x.UUID, x['标段/合同包'], x['名称'], x['类别'], x['通过审查'], x['报价（万元）'], x['得分'], x['未中标原因'], x['审查说明']])) },
+      { name: '总表', rows: [['序号', 'URL', 'UUID', '标段/合同包', '项目名称', '采购单位', '中标供应商', '中标金额', '主UUID']]
+        .concat(Z.map((x, i) => [i + 1, x.URL, x.UUID, x['标段/合同包'], x['项目名称'], x['采购单位'], x['中标供应商'], x['中标金额'], x['主UUID']])) },
+      { name: '标的表', rows: [['序号', 'UUID', '标段/合同包', '产品服务名称', '品目', '品牌', '规格型号', '数量', '单价', '总价', '类别', '主UUID']]
+        .concat(B.map((x, i) => [i + 1, x.UUID, x['标段/合同包'], x['产品服务名称'], x['品目'], x['品牌'], x['规格型号'], x['数量'], x['单价'], x['总价'], x['类别'], x['主UUID']])) },
+      { name: '投标人表', rows: [['序号', 'UUID', '标段/合同包', '名称', '类别', '通过审查', '报价（万元）', '得分', '未中标原因', '审查说明', '主UUID']]
+        .concat(T.map((x, i) => [i + 1, x.UUID, x['标段/合同包'], x['名称'], x['类别'], x['通过审查'], x['报价（万元）'], x['得分'], x['未中标原因'], x['审查说明'], x['主UUID']])) },
     ],
     counts: { '总表': Z.length, '标的表': B.length, '投标人表': T.length },
     stats: stats,
