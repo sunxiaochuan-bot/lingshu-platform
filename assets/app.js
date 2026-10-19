@@ -6949,7 +6949,9 @@ function viewIngest() {
             /* ⑥ 入库：写内存表 + 基准对照（真实计算） */
             st.steps[5].s = 'run'; renderViewSteps();
             a = performance.now();
-            ING.store.push({ name: entry.name, r });
+            const record = { uuid: r.code || entry.name.replace(/\.[^.]+$/, ''), name: entry.name, r };
+            ING.store.push(record);
+            ING.tables = ingThreeTables([record]);
             const cmp = ingCompare(r, entry);
             await beat(5, performance.now() - a, null, a);
 
@@ -6959,6 +6961,7 @@ function viewIngest() {
               file: entry.name, kind: entry.kind, anns: 1, rows: r.rows.length,
               ms: wall, calcMs: Math.round(r.calcMs), ok: wall < 1000,
               winners: r.winners.length, checks: r.checks, cmp,
+              counts: ING.tables.counts,
               sample: r.rows.slice(0, 3), title: r.title || r.project, buyer: r.buyer, amountYuan: r.amountYuan,
             };
             LogStream.push('数据接入完成 · ' + entry.name + ' · 墙钟 ' + wall + ' ms（纯计算 ' + Math.round(r.calcMs) + ' ms）' + (wall < 1000 ? ' · <1s 达标' : ''), 'hit');
