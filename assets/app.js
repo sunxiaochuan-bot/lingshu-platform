@@ -3381,6 +3381,24 @@ function supplierPickerHTML(prefix, sups, picked) {
     <div class="hint">输入公司名可过滤；加入后点击上方已选主体可移除。</div>
   </div>`;
 }
+function bindTextCombo(selector, commit) {
+  const el = $(selector);
+  if (!el) return;
+  let composing = false;
+  const fire = () => {
+    const value = el.value.trim();
+    if (value) commit(value);
+  };
+  el.addEventListener('compositionstart', () => { composing = true; });
+  el.addEventListener('compositionend', () => { composing = false; });
+  el.addEventListener('change', () => { if (!composing) fire(); });
+  el.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && !composing && !ev.isComposing) {
+      ev.preventDefault();
+      fire();
+    }
+  });
+}
 function bindSupplierPicker(prefix, sups, picked) {
   const filter = $('#' + prefix + '-sup-filter');
   const select = $('#' + prefix + '-sup-select');
@@ -3393,11 +3411,20 @@ function bindSupplierPicker(prefix, sups, picked) {
     select.innerHTML = list.map(s => `<option value="${String(s).replace(/"/g, '&quot;')}">${s}</option>`).join('');
   };
   if (filter) filter.addEventListener('input', syncOptions);
-  add.addEventListener('click', () => {
-    const s = select.value;
+  const addFromInput = () => {
+    const typed = filter ? filter.value.trim() : '';
+    const s = typed || select.value;
     if (s && !picked.includes(s)) {
       picked.push(s);
+      if (filter) filter.value = '';
       renderView();
+    }
+  };
+  add.addEventListener('click', addFromInput);
+  if (filter) filter.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && !ev.isComposing) {
+      ev.preventDefault();
+      addFromInput();
     }
   });
   document.querySelectorAll('#' + prefix + '-pick [data-rm]').forEach(b => {
@@ -3918,7 +3945,7 @@ function viewS1() {
 
   view._after = [
     () => {
-      const el = $('#s1-buyer'); if (el) el.addEventListener('change', () => { st.buyer = el.value; renderView(); });
+      bindTextCombo('#s1-buyer', value => { st.buyer = value; renderView(); });
       const mb = $('#s1-mode');
       if (mb) mb.addEventListener('click', ev => {
         const btn = ev.target.closest('[data-mode]'); if (!btn) return;
@@ -3989,9 +4016,8 @@ function viewS1() {
     <div class="block-b">
       <div class="filters">
         <label>采购单位</label>
-        <select id="s1-buyer" style="min-width:320px">
-          ${buyers.map(b => `<option value="${b}" ${st.buyer === b ? 'selected' : ''}>${b}</option>`).join('')}
-        </select>
+        <input id="s1-buyer" class="search" list="s1-buyer-list" style="min-width:320px" value="${String(st.buyer || '').replace(/"/g, '&quot;')}" placeholder="输入或选择采购单位">
+        <datalist id="s1-buyer-list">${buyers.map(b => `<option value="${String(b).replace(/"/g, '&quot;')}"></option>`).join('')}</datalist>
           <label style="margin-left:10px">口径</label>
           <span id="s1-mode" style="display:inline-flex;gap:6px">
             <button class="btn small ${isReplace ? 'ghost' : 'primary'}" data-mode="long">长期合作</button>
@@ -4093,7 +4119,7 @@ function viewS2() {
   const maxC = r.top[0] ? r.top[0].count : 1;
 
   view._after = [
-    () => { const el = $('#s2-buyer'); if (el) el.addEventListener('change', () => { st.buyer = el.value; renderView(); }); },
+    () => { bindTextCombo('#s2-buyer', value => { st.buyer = value; renderView(); }); },
     () => {
       const host = $('#s2-bid'); if (!host) return;
       host.style.height = '380px';
@@ -4144,9 +4170,8 @@ function viewS2() {
     <div class="block-b">
       <div class="filters">
         <label>采购单位</label>
-        <select id="s2-buyer" style="min-width:320px">
-          ${buyers.map(b => `<option value="${b}" ${st.buyer === b ? 'selected' : ''}>${b}</option>`).join('')}
-        </select>
+        <input id="s2-buyer" class="search" list="s2-buyer-list" style="min-width:320px" value="${String(st.buyer || '').replace(/"/g, '&quot;')}" placeholder="输入或选择采购单位">
+        <datalist id="s2-buyer-list">${buyers.map(b => `<option value="${String(b).replace(/"/g, '&quot;')}"></option>`).join('')}</datalist>
         <span class="pill">参与投标主体 <b class="mono">${r.bidderTotal}</b> 家</span>
         <span class="pill violet">协同组合 <b class="mono">${r.combos.length}</b> 组</span>
       </div>
@@ -4215,7 +4240,7 @@ function viewS3() {
   const maxC = r.top[0] ? r.top[0].count : 1;
 
   view._after = [
-    () => { const el = $('#s3-sup'); if (el) el.addEventListener('change', () => { st.sup = el.value; renderView(); }); },
+    () => { bindTextCombo('#s3-sup', value => { st.sup = value; renderView(); }); },
     () => {
       const host = $('#s3-net'); if (!host) return;
       const nodes = [{ id: 'M', name: st.sup, group: 'sup', value: 1e7, color: NODE.sup }];
@@ -4268,9 +4293,8 @@ function viewS3() {
     <div class="block-b">
       <div class="filters">
         <label>中标供应商</label>
-        <select id="s3-sup" style="min-width:320px">
-          ${sups.map(s => `<option value="${s}" ${st.sup === s ? 'selected' : ''}>${s}</option>`).join('')}
-        </select>
+        <input id="s3-sup" class="search" list="s3-sup-list" style="min-width:320px" value="${String(st.sup || '').replace(/"/g, '&quot;')}" placeholder="输入或选择中标供应商">
+        <datalist id="s3-sup-list">${sups.map(s => `<option value="${String(s).replace(/"/g, '&quot;')}"></option>`).join('')}</datalist>
         <span class="pill">历史项目 <b class="mono">${r.projectCount}</b> 个</span>
         <span class="pill violet">共同竞标主体 <b class="mono">${r.all.length}</b> 家</span>
       </div>
@@ -4338,7 +4362,8 @@ function viewS4() {
   const _qt0 = performance.now();  /* PERF: 仅测量计算耗时 */
   const sups = Array.from(ENT.suppliers.values()).sort((a, b) => b.amount - a.amount).map(s => s.name).filter(Boolean);
   const st = UI.s4;
-  st.picked = st.picked && st.picked.length >= 2 ? st.picked.filter(s => sups.includes(s)) : sups.slice(0, 3);
+  const cleanPicked = arr => Array.from(new Set((arr || []).map(s => String(s || '').trim()).filter(Boolean)));
+  st.picked = st.picked && st.picked.length >= 2 ? cleanPicked(st.picked) : sups.slice(0, 3);
   const r = queryS4(st.picked);
   const maxAmt = r.rows[0] ? r.rows[0].amount : 1;
 
@@ -4441,7 +4466,8 @@ function viewS5() {
   const _qt0 = performance.now();  /* PERF: 仅测量计算耗时 */
   const sups = Array.from(ENT.suppliers.values()).sort((a, b) => b.amount - a.amount).map(s => s.name).filter(Boolean);
   const st = UI.s5;
-  st.picked = st.picked && st.picked.length >= 2 ? st.picked.filter(s => sups.includes(s)) : sups.slice(0, 3);
+  const cleanPicked = arr => Array.from(new Set((arr || []).map(s => String(s || '').trim()).filter(Boolean)));
+  st.picked = st.picked && st.picked.length >= 2 ? cleanPicked(st.picked) : sups.slice(0, 3);
   const r = queryS5(st.picked);
 
   view._after = [
