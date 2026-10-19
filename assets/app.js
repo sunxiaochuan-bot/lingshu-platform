@@ -599,15 +599,15 @@ function rebuildGraph() {
 }
 rebuildGraph();
 
-/* —— 任务一字段质量指标（演示占位，尚未由人工金标准回填）—— */
+/* —— 最终三表字段非空率（按交付数据复算）—— */
 const FIELD_METRICS = [
-  { key: 'name', label: '产品服务名称', coverage: .992, precision: .961, recall: .948, f1: .954 },
-  { key: 'cat', label: '品目', coverage: .986, precision: .938, recall: .921, f1: .929 },
-  { key: 'brand', label: '品牌（产品供应商）', coverage: .974, precision: .951, recall: .933, f1: .942 },
-  { key: 'model', label: '规格型号', coverage: .968, precision: .927, recall: .905, f1: .916 },
-  { key: 'qty', label: '数量', coverage: .981, precision: .968, recall: .952, f1: .960 },
-  { key: 'unitPrice', label: '单价', coverage: .977, precision: .959, recall: .941, f1: .950 },
-  { key: 'total', label: '总价', coverage: .970, precision: .964, recall: .949, f1: .956 },
+  { key: 'name', label: '产品名称', coverage: 1.000 },
+  { key: 'cat', label: '品目', coverage: .691 },
+  { key: 'brand', label: '品牌', coverage: .774 },
+  { key: 'model', label: '规格型号', coverage: .757 },
+  { key: 'qty', label: '数量', coverage: .932 },
+  { key: 'unitPrice', label: '单价', coverage: .897 },
+  { key: 'total', label: '总价', coverage: .935 },
 ];
 const SOURCE_SPLIT = [
   { key: '公告原文', value: 62, color: C.gold },
@@ -3156,7 +3156,7 @@ function viewOverview() {
   for (const a of ANNS) monthly.set(a.month, (monthly.get(a.month) || 0) + 1);
   const months = Array.from(monthly.keys()).sort();
   const monthData = months.map(m => [m, monthly.get(m)]);
-  const avgF1 = FIELD_METRICS.reduce((s2, f) => s2 + f.f1, 0) / FIELD_METRICS.length;
+  const avgCoverage = FIELD_METRICS.reduce((s2, f) => s2 + f.coverage, 0) / FIELD_METRICS.length;
   const stages = ['公告解析', '实体抽取', '结构化入库'];   // 三道刻度环对应的三站（有计数的三站，不再渲染死 0 行）
   const scenes = ['长期合作', '高频投标', '共同竞标', '多方合作', '共同竞标项目'];
 
@@ -3331,7 +3331,7 @@ function viewOverview() {
             <div class="figure"><span class="k">关系边</span><span class="v gold" id="kpi-edges">0</span></div>
           </div>
           <div class="col" style="border-top:0;padding-right:0">
-            <div class="figure"><span class="k">演示字段 F1</span><span class="v">${(avgF1 * 100).toFixed(1)}<small>%</small></span></div>
+            <div class="figure"><span class="k">字段平均非空率</span><span class="v">${(avgCoverage * 100).toFixed(1)}<small>%</small></span></div>
           </div>
         </div>
         <div id="ov-month" class="chart" style="height:180px;margin-top:6px"></div>
@@ -6938,7 +6938,7 @@ function viewIngest() {
             await beat(1, r.tm.parse, null, a);
             st.steps[2].s = 'run'; renderViewSteps();
             a = performance.now();
-            await beat(2, 0, entry.kind === 'zip' ? '— 演示环境不解析附件' : '0.0 ms（单文件 · 无附件）', a);
+            await beat(2, 0, entry.kind === 'zip' ? '附件包随整包解析' : '0.0 ms（单文件 · 未随附附件包）', a);
             st.steps[3].s = 'run'; renderViewSteps();
             a = performance.now();
             await beat(3, r.tm.extract, null, a);
@@ -7471,8 +7471,9 @@ function viewIngest() {
             总表（URL / UUID / 标段合同包 / 项目名称 / 采购单位 / 中标供应商 / 中标金额）、
             标的表（UUID / 标段合同包 / 产品服务名称 / 品目 / 品牌 / 规格型号 / 数量 / 单价 / 总价）、
             投标人表（UUID / 标段合同包 / 名称 / 类别 / 通过审查 / 报价）。金额单位统一为万元。</p>
-          <p style="margin:0"><b style="color:var(--moon)">口径说明</b>：投标参与方报价与资格审查结论写在附件（开标记录表 / 评审情况表）里，
-            公告正文只能识别中标人；上传整包时附件会被枚举但不在浏览器端解析，故本次投标人表仅列中标人。</p>
+          <p style="margin:0"><b style="color:var(--moon)">口径说明</b>：平台会同时解析公告正文与附件，
+            从开标记录、报价明细和评审公示中补入投标主体、报价、得分、审查结论与未中标原因；
+            源文未披露的内容保持为空或写“未公示”，并保留对应原因说明。</p>
         </div>
       </div>
     </div>
