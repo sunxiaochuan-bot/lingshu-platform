@@ -6294,7 +6294,7 @@ function parseAnnouncement(html) {
     winners.forEach((w, i) => { if (w.amount == null) w.amount = amounts[i]; });
   }
     /* 标的物表：表头模糊映射 → 7 字段行
-       v1.3：补齐名字列别名（产品/名称/商品名称/主要投标标的名称…，实测漏掉 163 篇）、
+       字段映射改进：补齐名字列别名（产品/名称/商品名称/主要投标标的名称…）、
              新增品目列映射（原来恒为空）、允许只有总价没有单价的表（原来整张跳过）、
              表头支持不在首行（扫前 3 行）、不再只取第一张表。 */
     const HEADMAP = TABLE_HEADMAP;
