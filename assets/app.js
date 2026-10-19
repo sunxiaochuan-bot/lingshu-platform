@@ -3497,12 +3497,40 @@ function viewSearch() {
           if (again) { again.focus(); if (again.setSelectionRange && again.value) again.setSelectionRange(again.value.length, again.value.length); }
         });
       };
-      bind('#sq', 'q');
       ['cat', 'region', 'brand', 'supplier', 'buyer', 'min', 'max'].forEach(k => bind('#f-' + k, 'f', 'change'));
       const up = $('#sq');
-      if (up) up.addEventListener('input', () => {
-        st.f = st.f;
-      });
+      if (up) {
+        let composing = false;
+        let justComposed = 0;
+        let timer = 0;
+        const commit = () => {
+          const input = $('#sq');
+          if (!input) return;
+          st.q = input.value;
+          st.page = 1;
+          renderView();
+          requestAnimationFrame(() => {
+            const next = $('#sq');
+            if (!next) return;
+            next.focus();
+            if (next.setSelectionRange) next.setSelectionRange(next.value.length, next.value.length);
+          });
+        };
+        up.addEventListener('compositionstart', () => {
+          composing = true;
+          clearTimeout(timer);
+        });
+        up.addEventListener('compositionend', () => {
+          composing = false;
+          justComposed = performance.now();
+          commit();
+        });
+        up.addEventListener('input', () => {
+          if (composing || performance.now() - justComposed < 80) return;
+          clearTimeout(timer);
+          timer = setTimeout(commit, 180);
+        });
+      }
     },
     () => {
       const host = $('#sc-brand'); if (!host) return;
