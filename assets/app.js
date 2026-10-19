@@ -78,6 +78,32 @@ const EC_BASE = {
     textStyle: { color: C.moon, fontSize: 12 }, extraCssText: 'border-radius:2px',
   },
 };
+let EC_LOADING = null;
+let EC_RERENDER_PENDING = false;
+function ensureECharts() {
+  if (window.echarts) return Promise.resolve(true);
+  if (!EC_LOADING) {
+    EC_LOADING = new Promise(resolve => {
+      if (location.protocol === 'file:') { resolve(false); return; }
+      const script = document.createElement('script');
+      script.src = 'assets/echarts.min.js?v=5.5.1';
+      script.async = true;
+      script.onload = () => resolve(!!window.echarts);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+  }
+  return EC_LOADING;
+}
+function requestEChartsRender() {
+  if (EC_RERENDER_PENDING) return;
+  EC_RERENDER_PENDING = true;
+  const currentModule = UI.module;
+  ensureECharts().then(ok => {
+    EC_RERENDER_PENDING = false;
+    if (ok && UI.module === currentModule) renderView();
+  });
+}
 
 /* ═══════════════════ 1. 数据装载与关系模型 ═══════════════════ */
 /* 数据字典展开：gen_data.mjs 把高频重复字符串压成单字符引用（U+E000 起），这里还原 */
@@ -699,6 +725,12 @@ const Gate = (() => {
 
   function play() {
     if (!gate) { document.body.classList.remove('locked'); return; }
+    if (window.__EARLY_SKIP) {
+      const boot = $('#gate-load');
+      if (boot) boot.classList.add('off');
+      finish();
+      return;
+    }
     const boot = $('#gate-load');
     if (boot) boot.classList.add('off');
     if (REDUCED) { finish(); return; }
@@ -2169,7 +2201,7 @@ const RenderQueue = (() => {
 
 /* ECharts 封装：不可用时返回 null，调用方使用内置备用图表 */
 function echartsOrNull(host, option, height) {
-  if (!window.echarts) return null;
+  if (!window.echarts) { requestEChartsRender(); return null; }
   try {
     host.style.height = (height || 320) + 'px';
     const ch = window.echarts.init(host, null, { renderer: 'canvas' });
@@ -2642,7 +2674,8 @@ function kpiThrottle(el, getValue, opts) {
 /* 图表实例全局复用：同一容器只 init 一次（第 12 节：禁止频繁 destroy/create） */
 const ChartPool = new Map();
 function chartOnce(host, option, height) {
-  if (!host || !window.echarts) return null;
+  if (!host) return null;
+  if (!window.echarts) { requestEChartsRender(); return null; }
   const key = host.id || (host.id = 'chart-' + Math.random().toString(36).slice(2, 8));
   let ch = ChartPool.get(key);
   if (!ch) {
@@ -8073,6 +8106,8 @@ function boot() {
     scene: () => UI.module,
     errors: () => window.__ERRS,
   };
+
+  setTimeout(() => { ensureECharts(); }, 1200);
 
   /* 自检信标：把运行状态写入 DOM（node 002），便于在无控制台的自动化环境中校验 */
   setInterval(() => {
